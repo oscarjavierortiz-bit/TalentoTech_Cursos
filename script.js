@@ -106,25 +106,117 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 6. Supabase Logic for Comments
+    // 6. Supabase Logic for Comments and Auth
     const SUPABASE_URL = 'https://tfnkttndirngwndzndbj.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KFrHhQ0wyhX8RZ9UlcMxHA_IQrwOu67';
+    
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const commentsList = document.getElementById('commentsList');
     const commentForm = document.getElementById('commentForm');
+    const authNavItem = document.getElementById('auth-nav-item');
+    const commentFormWrapper = document.getElementById('comment-form-wrapper');
+    const loginToCommentMsg = document.getElementById('login-to-comment');
 
+    // Global session state
+    let currentUser = null;
+
+    // --- Modal Handlers ---
+    window.openAuthModal = () => {
+        document.getElementById('authModal').style.display = 'block';
+    };
+
+    window.closeAuthModal = () => {
+        document.getElementById('authModal').style.display = 'none';
+        // Reset to login form
+        toggleAuthForm('login');
+    };
+
+    window.toggleAuthForm = (type) => {
+        document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none';
+        document.getElementById('signup-form').style.display = type === 'signup' ? 'block' : 'none';
+    };
+
+    // --- Auth Logic ---
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        updateUIForAuth();
+    });
+
+    function updateUIForAuth() {
+        if (currentUser) {
+            const displayName = currentUser.user_metadata?.full_name || currentUser.email;
+            authNavItem.innerHTML = `<span style="margin-right: 1rem; color: var(--secondary)">Hola, ${displayName.split(' ')[0]}</span><a href="javascript:void(0)" onclick="handleLogout()" class="btn btn-outline">Salir</a>`;
+            commentFormWrapper.style.display = 'block';
+            loginToCommentMsg.style.display = 'none';
+        } else {
+            authNavItem.innerHTML = `<a href="javascript:void(0)" onclick="openAuthModal()" class="btn btn-outline">Ingresar</a>`;
+            commentFormWrapper.style.display = 'none';
+            loginToCommentMsg.style.display = 'block';
+        }
+    }
+
+    window.handleLogin = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        setAuthLoading(true);
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        setAuthLoading(false);
+
+        if (error) {
+            alert('Error: ' + error.message);
+        } else {
+            closeAuthModal();
+        }
+    };
+
+    window.handleSignup = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const fullName = document.getElementById('signup-name').value;
+
+        setAuthLoading(true);
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { full_name: fullName },
+                emailRedirectTo: window.location.origin
+            }
+        });
+        setAuthLoading(false);
+
+        if (error) {
+            alert('Error: ' + error.message);
+        } else {
+            alert('¡Registro exitoso! Por favor revisa tu correo para validar tu cuenta.');
+            closeAuthModal();
+        }
+    };
+
+    window.handleLogout = async () => {
+        await supabaseClient.auth.signOut();
+    };
+
+    function setAuthLoading(loading) {
+        document.getElementById('auth-forms').style.display = loading ? 'none' : 'block';
+        document.getElementById('auth-loading').style.display = loading ? 'block' : 'none';
+    }
+
+    // --- Comment Logic ---
     async function fetchComments() {
         try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/comentarios?select=*&order=fecha.desc`, {
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`
-                }
-            });
+            const { data, error } = await supabaseClient
+                .from('comentarios')
+                .select('*')
+                .order('fecha', { ascending: false });
 
-            if (!response.ok) throw new Error('Error al cargar comentarios');
-
-            const comments = await response.json();
-            renderComments(comments);
+            if (error) throw error;
+            renderComments(data);
         } catch (error) {
             console.error(error);
             commentsList.innerHTML = '<p class="loading-text">Error al cargar el muro.</p>';
@@ -153,44 +245,43 @@ document.addEventListener('DOMContentLoaded', () => {
     if (commentForm) {
         commentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!currentUser) return alert('Debes iniciar sesión.');
+
             const submitBtn = commentForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerText;
-            
-            const formData = new FormData(commentForm);
-            const entry = {
-                nombre: formData.get('nombre'),
-                comentario: formData.get('comentario')
-            };
+            const text = document.getElementById('comment-text').value;
 
             submitBtn.innerText = 'Publicando...';
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/comentarios`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify(entry)
-                });
+                const { error } = await supabaseClient
+                    .from('comentarios')
+                    .insert([
+                        { 
+                            comentario: text, 
+                            nombre: currentUser.user_metadata?.full_name || currentUser.email 
+                        }
+                    ]);
 
-                if (response.ok) {
-                    commentForm.reset();
-                    fetchComments(); // Refresh list
-                } else {
-                    alert('No se pudo publicar el comentario.');
-                }
+                if (error) throw error;
+                
+                commentForm.reset();
+                fetchComments();
             } catch (error) {
-                alert('Error de conexión.');
+                alert('Error: ' + error.message);
             } finally {
                 submitBtn.innerText = originalText;
                 submitBtn.disabled = false;
             }
         });
     }
+
+    // Close modal when clicking outside
+    window.onclick = (event) => {
+        const modal = document.getElementById('authModal');
+        if (event.target == modal) closeAuthModal();
+    };
 
     // Initial load
     fetchComments();
