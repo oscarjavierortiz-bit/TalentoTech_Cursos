@@ -105,4 +105,93 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // 6. Supabase Logic for Comments
+    const SUPABASE_URL = 'https://tfnkttndirngwndzndbj.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_KFrHhQ0wyhX8RZ9UlcMxHA_IQrwOu67';
+    const commentsList = document.getElementById('commentsList');
+    const commentForm = document.getElementById('commentForm');
+
+    async function fetchComments() {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/comentarios?select=*&order=fecha.desc`, {
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Error al cargar comentarios');
+
+            const comments = await response.json();
+            renderComments(comments);
+        } catch (error) {
+            console.error(error);
+            commentsList.innerHTML = '<p class="loading-text">Error al cargar el muro.</p>';
+        }
+    }
+
+    function renderComments(comments) {
+        if (comments.length === 0) {
+            commentsList.innerHTML = '<p class="loading-text">Sé el primero en comentar.</p>';
+            return;
+        }
+
+        commentsList.innerHTML = comments.map(c => `
+            <div class="comment-card">
+                <div class="comment-header">
+                    <span class="comment-author">${c.nombre}</span>
+                    <span class="comment-date">${new Date(c.fecha).toLocaleDateString()}</span>
+                </div>
+                <div class="comment-body">
+                    ${c.comentario}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = commentForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            
+            const formData = new FormData(commentForm);
+            const entry = {
+                nombre: formData.get('nombre'),
+                comentario: formData.get('comentario')
+            };
+
+            submitBtn.innerText = 'Publicando...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/comentarios`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(entry)
+                });
+
+                if (response.ok) {
+                    commentForm.reset();
+                    fetchComments(); // Refresh list
+                } else {
+                    alert('No se pudo publicar el comentario.');
+                }
+            } catch (error) {
+                alert('Error de conexión.');
+            } finally {
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // Initial load
+    fetchComments();
 });

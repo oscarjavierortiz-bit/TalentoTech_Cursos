@@ -63,6 +63,7 @@ ul {
 .text-gradient {
     background: linear-gradient(90deg, var(--primary), var(--secondary));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -337,6 +338,102 @@ textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(145, 85, 253, 0.2);
+}
+
+/* Comments Section Styles */
+.comments-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 2rem;
+}
+
+.comment-form-container {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+}
+
+.comment-form-container h3 {
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+}
+
+.comments-display h3 {
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 10px;
+}
+
+.comment-card {
+    background: var(--glass);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.comment-author {
+    font-weight: 700;
+    color: var(--primary-alt);
+    font-size: 1.1rem;
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    opacity: 0.5;
+}
+
+.comment-body {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.loading-text {
+    text-align: center;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 968px) {
+    .comments-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
 }
 
 /* Accordion */

@@ -28,6 +28,7 @@
                 <li><a href="#bootcamps">Bootcamps</a></li>
                 <li><a href="#beneficios">Beneficios</a></li>
                 <li><a href="#faq">FAQ</a></li>
+                <li><a href="#comentarios">Comentarios</a></li>
                 <li><a href="#inscripcion" class="btn btn-primary">Inscripción</a></li>
             </ul>
         </nav>
@@ -146,6 +147,38 @@
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Enviar Inscripción</button>
                     </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Comentarios -->
+        <section id="comentarios" class="section bg-light">
+            <div class="container">
+                <h2 class="section-title">Muro de <span class="text-gradient">Comentarios</span></h2>
+                <div class="comments-layout">
+                    <!-- Formulario de Comentario -->
+                    <div class="comment-form-container">
+                        <h3>Deja tu opinión</h3>
+                        <form id="commentForm" class="contact-form">
+                            <div class="form-group">
+                                <label for="comment-name">Nombre</label>
+                                <input type="text" id="comment-name" name="nombre" placeholder="Tu nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="comment-text">Comentario</label>
+                                <textarea id="comment-text" name="comentario" rows="3" placeholder="¿Qué opinas de Talento Tech?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Publicar Comentario</button>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Comentarios -->
+                    <div class="comments-display">
+                        <h3>Lo que dicen otros campistas</h3>
+                        <div id="commentsList" class="comments-list">
+                            <p class="loading-text">Cargando comentarios...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
