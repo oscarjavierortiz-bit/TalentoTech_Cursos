@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Supabase Logic for Comments and Auth
     const SUPABASE_URL = 'https://tfnkttndirngwndzndbj.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KFrHhQ0wyhX8RZ9UlcMxHA_IQrwOu67';
-    
+
     // Initialize Supabase client
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
-        
+
         setAuthLoading(true);
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         setAuthLoading(false);
@@ -327,14 +327,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { error } = await supabaseClient
                     .from('comentarios')
                     .insert([
-                        { 
-                            comentario: text, 
-                            nombre: currentUser.user_metadata?.full_name || currentUser.email 
+                        {
+                            comentario: text,
+                            nombre: currentUser.user_metadata?.full_name || currentUser.email
                         }
                     ]);
 
                 if (error) throw error;
-                
+
                 commentForm.reset();
                 currentPage = 1; // Return to first page to see new comment
                 fetchComments();
