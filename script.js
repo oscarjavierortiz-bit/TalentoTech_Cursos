@@ -121,22 +121,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global session state
     let currentUser = null;
+    let allComments = [];
+    let currentPage = 1;
+    const commentsPerPage = 4;
 
     // --- Modal Handlers ---
     window.openAuthModal = () => {
         document.getElementById('authModal').style.display = 'block';
+        clearAuthStatus();
     };
 
     window.closeAuthModal = () => {
         document.getElementById('authModal').style.display = 'none';
-        // Reset to login form
         toggleAuthForm('login');
+        clearAuthStatus();
     };
 
     window.toggleAuthForm = (type) => {
         document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none';
         document.getElementById('signup-form').style.display = type === 'signup' ? 'block' : 'none';
+        clearAuthStatus();
     };
+
+    window.togglePasswordVisibility = (id) => {
+        const input = document.getElementById(id);
+        const btn = input.nextElementSibling;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerText = '🔒';
+        } else {
+            input.type = 'password';
+            btn.innerText = '👁️';
+        }
+    };
+
+    function showAuthStatus(msg, isError = false) {
+        const statusEl = document.getElementById('auth-status-msg');
+        statusEl.innerText = msg;
+        statusEl.style.display = 'block';
+        statusEl.style.color = isError ? '#ff4d4f' : 'var(--secondary)';
+    }
+
+    function clearAuthStatus() {
+        const statusEl = document.getElementById('auth-status-msg');
+        statusEl.style.display = 'none';
+        statusEl.innerText = '';
+    }
 
     // --- Auth Logic ---
     supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -177,7 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const email = document.getElementById('signup-email').value;
         const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
         const fullName = document.getElementById('signup-name').value;
+
+        if (password !== confirmPassword) {
+            showAuthStatus('Las contraseñas no coinciden', true);
+            return;
+        }
 
         setAuthLoading(true);
         const { data, error } = await supabaseClient.auth.signUp({
@@ -191,10 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setAuthLoading(false);
 
         if (error) {
-            alert('Error: ' + error.message);
+            showAuthStatus('Error: ' + error.message, true);
         } else {
-            alert('¡Registro exitoso! Por favor revisa tu correo para validar tu cuenta.');
-            closeAuthModal();
+            // No alert as requested, just show status in the form
+            showAuthStatus('¡Registro exitoso! Por favor revisa tu correo para validar tu cuenta.');
+            // Clear inputs
+            e.target.reset();
         }
     };
 
@@ -216,20 +254,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 .order('fecha', { ascending: false });
 
             if (error) throw error;
-            renderComments(data);
+            allComments = data;
+            renderComments();
         } catch (error) {
             console.error(error);
             commentsList.innerHTML = '<p class="loading-text">Error al cargar el muro.</p>';
         }
     }
 
-    function renderComments(comments) {
-        if (comments.length === 0) {
+    function renderComments() {
+        if (allComments.length === 0) {
             commentsList.innerHTML = '<p class="loading-text">Sé el primero en comentar.</p>';
+            document.getElementById('pagination-controls').style.display = 'none';
             return;
         }
 
-        commentsList.innerHTML = comments.map(c => `
+        const startIndex = (currentPage - 1) * commentsPerPage;
+        const endIndex = startIndex + commentsPerPage;
+        const currentSlice = allComments.slice(startIndex, endIndex);
+
+        commentsList.innerHTML = currentSlice.map(c => `
             <div class="comment-card">
                 <div class="comment-header">
                     <span class="comment-author">${c.nombre}</span>
@@ -240,7 +284,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `).join('');
+
+        // Pagination controls visibility and info
+        const totalPages = Math.ceil(allComments.length / commentsPerPage);
+        document.getElementById('pagination-controls').style.display = allComments.length > commentsPerPage ? 'flex' : 'none';
+        document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages}`;
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages;
     }
+
+    // Pagination Listeners
+    document.getElementById('prevPage').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderComments();
+            document.getElementById('comentarios').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+        const totalPages = Math.ceil(allComments.length / commentsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderComments();
+            document.getElementById('comentarios').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
 
     if (commentForm) {
         commentForm.addEventListener('submit', async (e) => {
@@ -267,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error) throw error;
                 
                 commentForm.reset();
+                currentPage = 1; // Return to first page to see new comment
                 fetchComments();
             } catch (error) {
                 alert('Error: ' + error.message);

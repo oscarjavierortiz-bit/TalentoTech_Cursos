@@ -187,6 +187,11 @@
                         <div id="commentsList" class="comments-list">
                             <p class="loading-text">Cargando comentarios...</p>
                         </div>
+                        <div id="pagination-controls" class="pagination" style="display: none;">
+                            <button id="prevPage" class="btn btn-outline btn-sm">Anterior</button>
+                            <span id="pageInfo">Página 1</span>
+                            <button id="nextPage" class="btn btn-outline btn-sm">Siguiente</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -271,9 +276,12 @@
                             <label>Email</label>
                             <input type="email" id="login-email" required placeholder="tu@email.com">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group password-field">
                             <label>Contraseña</label>
-                            <input type="password" id="login-password" required placeholder="******">
+                            <div class="input-wrapper">
+                                <input type="password" id="login-password" required placeholder="******">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password')">👁️</button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Entrar</button>
                         <p class="auth-switch">¿No tienes cuenta? <a href="javascript:void(0)"
@@ -291,14 +299,23 @@
                             <label>Email</label>
                             <input type="email" id="signup-email" required placeholder="tu@email.com">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group password-field">
                             <label>Contraseña</label>
-                            <input type="password" id="signup-password" required placeholder="Mínimo 6 caracteres"
-                                minlength="6">
+                            <div class="input-wrapper">
+                                <input type="password" id="signup-password" required placeholder="Mínimo 6 caracteres" minlength="6">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('signup-password')">👁️</button>
+                            </div>
                         </div>
+                        <div class="form-group password-field">
+                            <label>Confirmar Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="signup-confirm-password" required placeholder="Repite tu contraseña" minlength="6">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('signup-confirm-password')">👁️</button>
+                            </div>
+                        </div>
+                        <div id="auth-status-msg" style="display: none; color: var(--secondary); margin-bottom: 1rem; text-align: center; font-size: 0.9rem;"></div>
                         <button type="submit" class="btn btn-primary">Registrarme</button>
-                        <p class="auth-switch">¿Ya tienes cuenta? <a href="javascript:void(0)"
-                                onclick="toggleAuthForm('login')">Ingresa</a></p>
+                        <p class="auth-switch">¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="toggleAuthForm('login')">Ingresa</a></p>
                     </form>
                 </div>
             </div>
@@ -311,6 +328,39 @@
     <script src="script.js"></script>
     <script>
         (function () { if (!window.chatbase || window.chatbase("getState") !== "initialized") { window.chatbase = (...arguments) => { if (!window.chatbase.q) { window.chatbase.q = [] } window.chatbase.q.push(arguments) }; window.chatbase = new Proxy(window.chatbase, { get(target, prop) { if (prop === "q") { return target.q } return (...args) => target(prop, ...args) } }) } const onLoad = function () { const script = document.createElement("script"); script.src = "https://www.chatbase.co/embed.min.js"; script.id = "EqX1jBFSJJoczUqSNbc8i"; script.domain = "www.chatbase.co"; document.body.appendChild(script) }; if (document.readyState === "complete") { onLoad() } else { window.addEventListener("load", onLoad) } })();
+    </script>
+
+    <!-- VAPI Widget -->
+    <vapi-widget
+        public-key="cdf68331-b3b5-419b-8856-f86d1bd8d154"
+        assistant-id="a8c324cb-9c86-45e1-b76c-1983213d04b7"
+        mode="voice"
+        theme="dark"
+        base-bg-color="#000000"
+        accent-color="#14B8A6"
+        cta-button-color="#000000"
+        cta-button-text-color="#ffffff"
+        border-radius="large"
+        size="full"
+        position="bottom-right"
+        title="TALK WITH AI"
+        start-button-text="Start"
+        end-button-text="End Call"
+        chat-first-message="Hey, How can I help you today?"
+        chat-placeholder="Type your message..."
+        voice-show-transcript="true"
+        consent-required="true"
+        consent-title="Terms and conditions"
+        consent-content="By clicking &quot;Agree,&quot; and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as otherwise described in our Terms of Service."
+        consent-storage-key="vapi_widget_consent"
+    > 
+    </vapi-widget>
+    
+    <!-- VAPI Script -->
+    <script
+        src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
+        async
+        type="text/javascript">
     </script>
 </body>
 
